@@ -1,14 +1,15 @@
 from .flow import *
-from .agent_results.base import AgentAnalysisResult
-from .agent_results.result import *
-from .agent_results.extract_base import *  # Explicitly import extract_base models
+# from .agent_results.base import AgentAnalysisResult
+# from .agent_results.result import *
+# from .agent_results.extract_base import *  # Explicitly import extract_base models
 from .agent_tasks import *
+from .agent_results import *
 
 __all__ = [
     # Flow/Task specific models
     "RunAIDeps",
     "RunAITask",
-    "RunAgentRepomixDeps",
+    "RunAgentDeps",
     
     # Agent result models (from agent_results/result.py)
     "TokenUsage",
@@ -29,4 +30,11 @@ __all__ = [
     "ApiEndpoint",  # From extract_base.py
     "ApiInfo",  # From extract_base.py
     "BaseAgentAnalysisResult",
+    
+    # AppSec agent models
+    "SecurityAnalysisResult",
+    "MaliciousCodeElement",
+    "SensitiveInfoElement",
+    "VulnerabilityElement",
+    "SecurityRecommendation"
 ]

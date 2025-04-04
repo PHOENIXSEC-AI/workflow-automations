@@ -138,6 +138,9 @@ class AgentBatchResult(BaseModel):
         default_factory=list,
         description="List of individual task results"
     )
+    def get_file_map(self) -> Dict[str,Union['AgentSuccessResult', 'AgentErrorResult']]:
+        return {result_item.get('file_path','default'): result_item for result_item in self.results}
+    
 
 class DBOpsResult(BaseModel):
     """

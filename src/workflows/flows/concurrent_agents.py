@@ -27,10 +27,9 @@ from workflows.agents.models import (
     AgentResult,  # Unparsed raw str content returned by LLM
     AgentSuccessResult,
     AgentTask,
-    BaseAgentAnalysisResult,
     AgentAnalysisResult, # Parsed str content into pydantic model
     RunAIDeps,
-    RunAgentRepomixDeps,
+    RunAgentDeps,
     TokenUsage
 )
 from workflows.tasks.ai_ops.agent_config import (
@@ -54,37 +53,14 @@ This module provides functionality for running multiple AI agent tasks concurren
 with proper batching, retry logic, and result aggregation. It supports both PydanticAI 
 and OpenAI-compatible interfaces with comprehensive error handling.
 """
-@flow(
-    log_prints=app_config.is_development(), 
-    name="run_concurrent_agents",
-    task_runner=ThreadPoolTaskRunner(max_workers=app_config.MAX_WORKERS)
-)
-async def run_concurrent_agentsv2(
-    repomix_data: RepoAnalysisResult,
-    instructions: str,
-    agent_name: str = "env-vars-extractor",
-    max_retries: int = 3,
-    timeout_seconds: int = 120,
-) -> Union[Completed,Failed]:
 
-    repo_url = getattr(repomix_data,'repository_url','')
-    analysis_result = getattr(repomix_data, 'result', None)
-    
-    if not all([repo_url,analysis_result]):
-        err_msg = f"Error: `{run_concurrent_agentsv2.__name__}` is missing required attributes: repo_url or analysis_result"
-        logger.error(err_msg)
-        return Failed(err_msg)
-    
-    logger.info(f"Building analysis instructions for repo: ")
-    
-    
 @flow(
-    log_prints=app_config.is_development(), 
+    log_prints=True, 
     name="run_concurrent_agents",
     task_runner=ThreadPoolTaskRunner(max_workers=app_config.MAX_WORKERS)
 )
 async def run_concurrent_agents(
-    ctx: RunAgentRepomixDeps,
+    ctx: RunAgentDeps,
     instructions: str,
     agent_name: str = "env-vars-extractor",
     max_retries: int = 3,
@@ -110,16 +86,14 @@ async def run_concurrent_agents(
     """
     assert ctx is not None
     assert ctx.repomix_data is not None
-    # Get repository context
-    # logger.info(f"Retrieving repository context for obj_id: {ctx.target_obj_id} from {ctx.db_name}.{ctx.db_col_name}")
-    # repo_context_state = await get_file_context(ctx.db_name, ctx.db_col_name, ctx.target_obj_id)
     
-    # Handle failure in context retrieval
-    # if repo_context_state.is_failed():
-    #     logger.error(f"Failed to retrieve repository context: {repo_context_state.message}")
-    #     return Failed(message=f"FAIL: Could not retrieve repository context - {repo_context_state.message}")
+    if not hasattr(ctx.result_type,'model_json_schema'):
+        err_msg = f"Error: No expected return type configured for `run_concurrent_agents`: {repo_url}"
+        logger.error(err_msg)
+        return Failed(message=f"FAIL: {err_msg}")  
     
-    # repo_context = await repo_context_state.result()
+    
+    llm_return_data_schema = ctx.result_type.model_json_schema()
     repomix_result_data = getattr(ctx.repomix_data,'result', None)
     files = getattr(repomix_result_data,'files', [])
     
@@ -134,7 +108,7 @@ async def run_concurrent_agents(
     tasks = create_agent_tasks(
         instructions=instructions, 
         repo_context=repomix_result_data, 
-        result_type=AgentAnalysisResult
+        result_type_schema=llm_return_data_schema
     )
     
     # Check if we have tasks to process
@@ -153,12 +127,7 @@ async def run_concurrent_agents(
         "tags":[agent_name, repo_name, "llm", "pydantic-ai"]
     }
     agent, config = get_async_pydanticai_agent(agent_name)
-    # configured_task = run_agent_pydantic.with_options(
-    #     retries=max_retries,
-    #     retry_delay_seconds=exponential_backoff(backoff_factor=2),
-    #     timeout_seconds=timeout_seconds,
-    #     tags=[agent_name, repo_name, "llm", "pydantic-ai"]
-    # )
+    
     configured_task = run_agent_pydantic.with_options(**task_build_kwargs)
     logger.debug(f"Agent Task Configuration: {task_build_kwargs}")
     
@@ -203,34 +172,37 @@ async def run_concurrent_agents(
         logger.info(f"Batch {i+1} completed: {batch_success_count}/{batch_size} successful")
         logger.info(f"  - Cumulative progress: {overall_success_count} successful, {overall_fail_count} failed")
     
+    # Create a final obj that this task will return
+    final_result = AgentBatchResult(
+        successful=len(success_results),
+        failed=len(fail_results),
+        total_tasks=len(tasks)
+    )
+    
     # Get Agent response message for parsing
     agent_response_content = [(agent_response.task,agent_response.result) for agent_response in success_results]
     
     # Build final result obj
-    # for task_ctx, agent_response in agent_response_content:
-    #     try:
-    #         # Dumping to ensure all extra fields from agent_response are included
-    #         # Make sure both objects are Pydantic models before using model_dump()
-    #         if hasattr(task_ctx, 'model_dump') and hasattr(agent_response, 'model_dump'):
-    #             response_w_task_ctx = task_ctx.model_dump() | agent_response.model_dump()
-    #         else:
-    #             logger.error(f"Expected Pydantic models, got {type(task_ctx)} and {type(agent_response)}")
-    #             continue
+    for task_ctx, agent_response in agent_response_content:
+        try:
+            # Dumping to ensure all extra fields from agent_response are included
+            # Make sure both objects are Pydantic models before using model_dump()
+            if hasattr(task_ctx, 'model_dump') and hasattr(agent_response, 'model_dump'):
+                response_w_task_ctx = task_ctx.model_dump() | agent_response.model_dump()
+            else:
+                logger.error(f"Expected Pydantic models, got {type(task_ctx)} and {type(agent_response)}")
+                continue
             
-    #         final_result.results.append(response_w_task_ctx)
-    #     except Exception as e:
-    #         logger.error(f"Failed to merge task_ctx and agent_response, type(`agent_response`): {type(agent_response).__name__}: {str(e)}")
-    #         continue
+            final_result.results.append(response_w_task_ctx)
+        except Exception as e:
+            logger.error(f"Failed to merge task_ctx and agent_response, type(`agent_response`): {type(agent_response).__name__}: {str(e)}")
+            continue
     
-    # final_result.successful = len(success_results)
-    # final_result.failed = len(fail_results)
-    # final_result.total_tasks = len(tasks)
-    # flow_name = get_flow_name()
+    if not final_result.results:
+        return Failed(message=f"FAIL: {get_flow_name()}")
     
-    # if not final_result.results:
-    #     return Failed(message=f"FAIL: {flow_name}")
-    
-    return Completed(data={},message=f"✅ OK: test")
+    logger.info(f"  - Cumulative progress: Total: {final_result.total_tasks} of which: {final_result.successful} successful, {final_result.failed} failed")
+    return Completed(data=final_result,message=f"✅ OK: Run Concurrent Agents Completed Successfully")
 
 @task(
     name="run_agent_pydantic",
@@ -350,7 +322,6 @@ async def run_agent_pydantic(
     except Exception as e:
         # Catch all other exceptions - PydanticAI will have its own error types
         duration = time.time() - start_time
-        logger.error(f"Unexpected error for agent {agent_name} after {duration:.2f}s: {str(e)}")
         
         # Determine if this is a retryable error
         error_class = e.__class__.__name__
@@ -362,9 +333,10 @@ async def run_agent_pydantic(
         ]
         
         if error_class in retryable_errors:
+            logger.warning(f"Expected error: {str(e)} for agent {agent_name} after {duration:.2f}s execution - Will Retry... ")
             # Raise for Prefect to handle retry
             raise e
-        
+        logger.error(f"Unexpected error for agent {agent_name} after {duration:.2f}s: {str(e)}")
         error_result = AgentErrorResult(
             task=task,
             error_type="unexpected",

@@ -1,24 +1,32 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Type
 from dataclasses import dataclass, field
 from pydantic import BaseModel, Field
 
+
+from workflows.agents.models.agent_results import AgentAnalysisResult
 from core.models import RepoAnalysisResult
 
 @dataclass
-class RunAgentRepomixDeps:
+class RunAgentDeps:
     repomix_data: RepoAnalysisResult = field(
         default=None,
         metadata={
             "description": "Repo Analysis Data gathered with Repomix tool"
         }
     )
-    
+    result_type: Type[AgentAnalysisResult] = field(
+        default_factory=dict,
+        metadata={
+            "description": "Model Schema of expected Agent result"
+        }
+    )
     shared_agent: Optional[Any] = field(
         default=None,
         metadata={
             "description": "Shared instance of AI Agent to perform given task"
         }
     )
+    
 
 # class RunAITask(BaseModel):
 #     """Model representing the task context for AI analysis."""
@@ -54,4 +62,4 @@ class RunAgentRepomixDeps:
 
 
 
-__all__ = ["RunAgentRepomixDeps"]
+__all__ = ["RunAgentDeps"]

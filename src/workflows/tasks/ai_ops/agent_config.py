@@ -15,9 +15,9 @@ from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
-from workflows.agents.models import RunAIDeps
-from workflows.agents.prompts import CODE_ANALYZER_SYS_PROMPT
-from workflows.agents.openrouter_models import DEEPSEEK_V3_0324, GEMINI_FLASH_V2
+# from workflows.agents.models import RunAIDeps
+from workflows.agents.prompts import CODE_ANALYZER_SYS_PROMPT, SECURITY_ANALYZER_SYS_PROMPT
+from workflows.agents.openrouter_models import DEEPSEEK_V3_0324, GEMINI_FLASH_V2, HERMES_3
 from workflows.tasks.ai_ops.tools import parse_code_analysis_response
 
 DEFAULT_MODEL_TEMP = 0.5
@@ -27,7 +27,11 @@ agent_mapping = {
     "env-vars-extractor": {
         "model": GEMINI_FLASH_V2,
         "system_prompt": CODE_ANALYZER_SYS_PROMPT,
-        "deps": RunAIDeps
+        # "deps": RunAIDeps
+    },
+    "appsec": {
+        "model": GEMINI_FLASH_V2, # Prod HERMES_3
+        "system_prompt": SECURITY_ANALYZER_SYS_PROMPT,
     }
 }
 

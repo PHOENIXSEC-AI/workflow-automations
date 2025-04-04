@@ -38,6 +38,10 @@ class RepoFile(BaseModel):
         ...,
         description="Content of the file, often with line numbers prefixed to each line"
     )
+    # Allow arbitrary additional fields
+    model_config = {
+        "extra": "allow",
+    }
 
 
 class RepomixResultData(BaseModel):
@@ -58,6 +62,11 @@ class RepomixResultData(BaseModel):
         ...,
         description="List of all files in the repository with their content"
     )
+    
+    # Allow arbitrary additional fields
+    model_config = {
+        "extra": "allow",
+    }
     
     @classmethod
     def from_json_file(cls, file_path: str) -> "RepomixResultData":

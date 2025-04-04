@@ -19,6 +19,7 @@ from workflows.agents.models import AgentTask, AgentAnalysisResult
 #TODO-Refactor this out 
 # from core.services.database.workflow_db_service import WorkflowDatabaseService
 from core.utils import LoggerFactory
+from core.models import RepomixResultData
 
 from core.config import app_config
 logger = LoggerFactory.get_logger(name=app_config.APP_TITLE,log_level=app_config.log_level, trace_enabled=True)
@@ -63,7 +64,7 @@ def get_run_duration(start_time: float) -> float:
     end_time = time.time()
     return end_time - start_time
 
-def create_agent_tasks(instructions: str, repo_context: Dict[str, Any], result_type: BaseModel) -> List[AgentTask]:
+def create_agent_tasks(instructions: str, repo_context: RepomixResultData, result_type_schema: BaseModel) -> List[AgentTask]:
     """
     Create a list of agent tasks from repository context with content retrieval.
     
@@ -87,12 +88,12 @@ def create_agent_tasks(instructions: str, repo_context: Dict[str, Any], result_t
         "files_with_separate_storage": 0
     }
     
-    for file in repo_context.get('files', []):
+    for file in getattr(repo_context,'files', []):
         # Process each file in the repository
         stats["files_processed"] += 1
         
         # Extract file path (required)
-        file_path = file.get('path')
+        file_path = getattr(file,'path','')
         if not file_path:
             logger.warning("Skipping file with missing path")
             stats["files_skipped"] += 1
@@ -100,7 +101,7 @@ def create_agent_tasks(instructions: str, repo_context: Dict[str, Any], result_t
         
         try:
             # Get content using helper function
-            file_content = getattr(repo_context,'content','')
+            file_content = getattr(file,'content','')
             # Skip if content retrieval failed
             if not file_content:
                 stats["files_skipped"] += 1
@@ -108,7 +109,7 @@ def create_agent_tasks(instructions: str, repo_context: Dict[str, Any], result_t
             
             # Format the task with file context
             task_context = instructions.format(
-                json_schema=result_type.model_json_schema(), 
+                json_schema=result_type_schema, 
                 content=file_content,
                 file_path=file_path)
             

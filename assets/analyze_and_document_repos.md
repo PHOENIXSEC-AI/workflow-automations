@@ -6,7 +6,7 @@ sequenceDiagram
     participant Base as add_base()
     participant Merge as merge_results()
     participant DocGen as run_generate_docs()
-    participant DB as MongoDB
+    participant DB as AioTinyDB
     
     Main->>Main: Validate github_repo_urls is not empty
     Main->>Check: Check prerequisites
@@ -18,15 +18,15 @@ sequenceDiagram
         RepAnalysis-->>Main: Return analysis result
         
         alt Analysis successful
-            Main->>Main: Extract db_result_obj_id
+            Main->>Main: Extract document_id
             
-            alt Valid ObjectId
+            alt Valid document_id
                 Main->>Base: Extract base information (add_base)
-                Base->>DB: Retrieve file context
+                Base->>DB: Retrieve document by ID
                 Base-->>Main: Return base results
                 
                 alt Base extraction successful
-                    Main->>Merge: Merge results into MongoDB document
+                    Main->>Merge: Merge results into document
                     Merge->>DB: Update document with enrichment data
                     Merge-->>Main: Return merge result
                     
@@ -41,7 +41,7 @@ sequenceDiagram
                 else Base extraction failed
                     Main->>Main: Add failed result to consolidated_results
                 end
-            else Invalid ObjectId
+            else Invalid document_id
                 Main->>Main: Add failed result to consolidated_results
             end
         else Analysis failed

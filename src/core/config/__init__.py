@@ -6,11 +6,10 @@ from typing import Optional, Self
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
-load_dotenv()
-
+# load_dotenv()
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
-    
+    load_dotenv()
     # Application Config, used with OpenRouter requests
     APP_TITLE: str = os.environ.get("APP_TITLE", "Workflow Automation")
     APP_URL: str = os.environ.get("APP_URL", "https://workflow-automations.local")
@@ -94,6 +93,8 @@ class Settings(BaseSettings):
     def model_post_init(self, __context):
         """Set the repomix config path after initialization"""
         self.DEFAULT_REPOMIX_CONFIG_PATH = self.get_repomix_config_path()
-        
+
+
+
 # Create a global settings object
 app_config = Settings()

@@ -1,4 +1,4 @@
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Self
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Self, Tuple
 
 from core.config import app_config
 from core.utils import LoggerFactory
@@ -32,7 +32,7 @@ class AsyncRepository(Generic[T]):
         self.model_class = model_class
         self.table_name = table_name or model_class.__name__
     
-    async def create(self, model: T) -> str:
+    async def create(self, model: T) -> Tuple[str,str]:
         """
         Create a new document from a model.
         
@@ -142,8 +142,19 @@ class AsyncRepository(Generic[T]):
         Returns:
             True if the document was updated, False otherwise.
         """
-        data = model.to_dict()
-        return await self.storage.update(self.table_name, doc_id, data)
+        if hasattr(model,'model_dump'):
+            data = model.model_dump()
+        elif hasattr(model,'to_dict'):
+            data = model.to_dict()
+        elif isinstance(model,dict):
+            data = model
+        else:
+            raise ValueError(f"DB update received unsupported data type: {type(model).__name__}")
+        
+        async with self.storage:
+            db_update_result = await self.storage.update(self.table_name, doc_id, data)
+        
+        return db_update_result
     
     async def delete(self, doc_id: str) -> bool:
         """
@@ -168,3 +179,27 @@ class AsyncRepository(Generic[T]):
             The number of documents matching the query, or total count if query is None.
         """
         return await self.storage.count(self.table_name, query)
+    
+    async def update_document_with_merged_data(self, doc_id, org_result_data):
+        """
+        Update the document in storage with merged data.
+        
+        Args:
+            doc_id: Document ID to update
+            org_result_data: Merged result data to save memory
+            
+        Returns:
+            bool: True if update was successful, False otherwise
+        """
+        if not doc_id:
+            logger.warning("No document ID provided for update")
+            return False
+            
+        update_success = await self.update(doc_id, org_result_data)
+        
+        if not update_success:
+            logger.warning(f"Failed to update document with merged strategy results")
+        else:
+            logger.info(f"Successfully updated document with merged strategy results")
+            
+        return update_success
