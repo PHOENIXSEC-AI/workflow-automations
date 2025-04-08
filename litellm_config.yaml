@@ -1,0 +1,51 @@
+# LiteLLM Configuration for workflow-automation project
+# This configuration file routes requests to OpenRouter for the specific models used in the project
+
+model_list:
+  # Configure the specific model used in the agent_mapping
+  # Add any additional models you might use in the future
+  - model_name: deepseek/deepseek-chat
+    litellm_params:
+      model: openrouter/deepseek/deepseek-chat
+      api_base: https://openrouter.ai/api/v1
+      api_key: os.environ/OPENROUTER_API_KEY
+      timeout: 60  # Increased timeout for this model
+  
+# Router settings
+router_settings:
+  routing_strategy: simple-shuffle  # Randomly pick from available models in the list
+  timeout: 60  # Increased request timeout (from 60)
+  retry_count: 5  # More retries on failure
+  num_retries: 5  # Retry on failure
+  request_cooldown_seconds: 0.5  # Slight cooldown between requests to avoid rate limits
+
+# Basic settings - No Redis or Sentry required
+litellm_settings:
+  # Circuit breaker params for avoiding cascading failures
+  circuit_breaker_enabled: true
+  circuit_breaker_threshold: 15
+  circuit_breaker_decay_seconds: 60
+
+# Logging settings
+logging:
+  level: info  # Use info for production, debug for troubleshooting
+  log_requests: true
+  log_responses: false  # Set to true only for debugging
+  log_file: "/var/log/litellm/litellm.log"  # Log to file for persistent logs
+  
+# Additional server settings
+server_settings:
+  health_check_interval: 5  # Check model availability regularly
+  connection_pool_ttl: 300  # Connection TTL in seconds
+  environment_variables_prefix: "LITELLM_"  # Prefix for env vars
+  streaming_timeout: 60  # Increased timeout for streaming responses
+  proxy_mode: true  # Ensure proxy mode is enabled
+  # Simple in-memory cache
+  cache: true
+  cache_params:
+    type: "local"
+    max_age: 300  # Cache responses for 5 minutes
+
+general_settings:
+  store_model_in_db: true
+  store_prompts_in_spend_logs: true
