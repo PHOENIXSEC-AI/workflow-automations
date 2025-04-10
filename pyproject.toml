@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "workflows"
+version = "0.1.0"
+description = "A simple Prefect workflow test project"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.9"
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project.scripts]
+secrets-manager = "scripts.secrets_manager:main"
+doc-gen = "workflows.flows.analyze_and_document_repos:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "isort>=5.0.0",
+    "flake8>=6.0.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.black]
+line-length = 100  # Longer line length to reduce forced wrapping
+target-version = ['py39']
+skip-string-normalization = true  # Preserves string quote style
+preview = false  # Disable preview features that might be unstable
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+# Skip files with syntax errors
+skip-magic-trailing-comma = true  # Less aggressive comma insertion
+experimental-string-processing = false  # Disable experimental string
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.pytest]
+testpaths = ["tests"]
