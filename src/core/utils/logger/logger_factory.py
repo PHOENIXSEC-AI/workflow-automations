@@ -8,7 +8,7 @@ from rich.logging import RichHandler
 
 from .custom_logger import CustomLogger
 
-from core.config import app_config
+from src.core.config import app_config
 
 class LoggerFactory:
     """Singleton factory class for creating and caching loggers with rich console output and logfire tracing."""

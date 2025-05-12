@@ -5,9 +5,9 @@ import os
 import tiktoken
 from typing import List, Optional, Union
 
-from core.utils import LoggerFactory
+from src.core.utils import LoggerFactory
+from src.core.config import app_config
 
-from core.config import app_config
 logger = LoggerFactory.get_logger(name=app_config.APP_TITLE,log_level=app_config.log_level, trace_enabled=True)
 
 # Constants - sourced from application config
@@ -16,8 +16,6 @@ DEFAULT_TOKENIZER = app_config.DEFAULT_TOKENIZER  # Default tokenizer to use (o2
 DEFAULT_TOKEN_LIMIT = app_config.TOKEN_LIMIT  # Maximum tokens per file chunk
 BYTES_PER_TOKEN_APPROX = app_config.BYTES_PER_TOKEN  # Approximate bytes per token for estimation
 MONGODB_MAX_TOKEN_ESTIMATE = app_config.MAX_SAFE_TOKEN_COUNT  # Maximum tokens that can safely fit in a MongoDB document
-
-# from core.utils.logger_factory import LoggerFactory
 
 # Default token limit per file chunk - can be overridden
 DEFAULT_TOKEN_LIMIT = int(os.getenv('TOKEN_FILE_LIMIT', '50000'))

@@ -8,7 +8,7 @@ from .ai import create_llm_request_error
 from .tasks import get_current_task_run_id,get_current_retry_count,create_task_batches
 from .format.colors import Crayons
 from .format.markdown_builder import *
-from core.utils.tokenization import count_tokens, chunk_text_by_tokens
+from .tokenization import count_tokens, chunk_text_by_tokens
 
 __all__ = [
     'LoggerFactory',
