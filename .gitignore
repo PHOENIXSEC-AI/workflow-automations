@@ -86,3 +86,8 @@ logs/
 
 reports/
 deprecated/
+*.dist/
+*.build/
+*.sqlite3
+*.sql
+*.csv
