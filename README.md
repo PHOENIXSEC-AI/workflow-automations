@@ -44,24 +44,82 @@ doc-gen
 [View detailed workflow diagram →](assets/analyze_and_document_repos.md)
 </details>
 
-## 🛠️ Setup & Installation
+## 🐳 Setup & Installation
+
+The project includes a multi-stage Docker build system with several options for local development and deployment:
+
+**Docker Compose Structure**:
+
+- `postgres`: Database for Prefect server
+- `prefect`: Prefect server for workflow orchestration
+- `workflow-agent`: Prefect agent 
+- `development`: Development environment with all dependencies
+
+
+### Workflow Agent
+
+This container runs a Prefect agent that executes your deployed workflows:
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-org/phoenixsec-workflow-automation.git
-
-# Install uv package manager
-pip install uv
-
-# Install dependencies using uv
-uv install .
-
-# Create Docker network for Prefect
-docker network create prefect-dev-network # Also used for development containers
-
-# Start the infrastructure services
-docker compose up -d
+# Build and start the workflow-agent
+docker compose up -d workflow-agent
 ```
+
+### Development Environment
+
+For local development with all dependencies pre-installed:
+
+```bash
+# Start the development container
+docker compose up -d development
+
+# Connect to the development container
+docker compose exec development bash
+```
+
+
+### Manual Build
+
+You can also build the Docker images separately:
+
+```bash
+# Build the production image
+docker build -t workflow-automation:latest .
+
+# Build the development image
+docker build -t workflow-automation:dev -f Dockerfile.dev .
+```
+
+
+
+## 🚀 Getting Started
+
+Run the repository analysis and documentation workflow:
+
+```bash
+make example
+#or
+docker compose exec development doc-gen --urls https://github.com/nielstron/demjson3
+```
+
+
+**Example usage:**
+
+```bash
+doc-gen --urls https://github.com/nielstron/demjson3
+```
+Multiple URLs:
+```bash
+doc-gen --urls-file sample_repos.txt
+```
+Private repo(make sure `.env` is configured and has `GITHUB_TOKEN`):
+```bash
+doc-gen --urls https://github.com/your_org/private_repo --private
+```
+
+
+For detailed workflow information, see the [workflow documentation](assets/analyze_and_document_repos.md).
+
 
 ## 🔑 Prerequisites
 
@@ -91,28 +149,6 @@ Note:
 - GITHUB_TOKEN is only required when analyzing private repositories
 - LOGFIRE_API_KEY is optional, used for tracing and advanced logging capabilities
 
-## 🚀 Getting Started
-
-Run the repository analysis and documentation workflow:
-
-```bash
-doc-gen --urls https://github.com/nielstron/demjson3
-```
-Multiple URLs:
-```bash
-doc-gen --urls-file sample_repos.txt
-```
-Private repo(make sure `.env` is configured and has `GITHUB_TOKEN`):
-```bash
-doc-gen --urls https://github.com/your_org/private_repo --private
-```
-
-
-For detailed workflow information, see the [workflow documentation](assets/analyze_and_document_repos.md).
-
-## 📚 Documentation
-
-For detailed documentation on creating custom workflows, tasks, and integrating with external systems, see the [docs folder](./docs).
 
 ## 🙏 Credits
 
