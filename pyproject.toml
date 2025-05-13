@@ -6,12 +6,26 @@ build-backend = "setuptools.build_meta"
 name = "workflows"
 version = "0.1.0"
 description = "A simple Prefect workflow test project"
-license = {text = "Apache-2.0"}
+license = {text = "MIT"}
 requires-python = ">=3.9"
-dynamic = ["dependencies"]
-
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+dependencies = [
+  "aiotinydb>=2.0.0",
+  "chromadb>=1.0.8",
+  "click>=8.1.8",
+  "crawl4ai>=0.6.3",
+  "demjson3>=3.0.6",
+  "dotenv>=0.9.9",
+  "gitpython>=3.1.44",
+  "httpx>=0.28.1",
+  "logfire>=3.15.1",
+  "prefect==3.3.3",
+  "prefect-aws",
+  "psutil>=7.0.0",
+  "pydantic-ai==0.0.55",
+  "requests>=2.32.3",
+  "tiktoken>=0.9.0",
+  "uvicorn>=0.34.2",
+]
 
 [project.scripts]
 secrets-manager = "scripts.secrets_manager:main"
