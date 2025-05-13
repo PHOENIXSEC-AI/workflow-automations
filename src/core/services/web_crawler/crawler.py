@@ -5,7 +5,7 @@ from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, RoundRobi
 from crawl4ai.proxy_strategy import ProxyConfig
 from typing import List, Dict, Optional
 
-from src.core.services.web_crawler.proxy import load_proxies_config
+from core.services.web_crawler.proxy import load_proxies_config
 
 CONTENT_STORAGE = '.workflow-automation/data/chroma'
 

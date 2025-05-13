@@ -45,7 +45,7 @@ TIMEOUT_SECONDS = 60  # Timeout for LLM requests
 # LiteLLM Proxy Configuration
 # When running in Docker, use the service name (litellm-proxy) instead of localhost
 LITELLM_PROXY_BASE_URL = os.environ.get("LITELLM_PROXY_BASE_URL", "http://litellm-proxy:4000")
-LITELLM_PROXY_API_KEY = os.environ.get("LITELLM_PROXY_AGENT_KEY", "")
+LITELLM_PROXY_API_KEY = os.environ.get("LITELLM_PROXY_API_KEY", "")
 
 # OpenRouter Configuration
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"

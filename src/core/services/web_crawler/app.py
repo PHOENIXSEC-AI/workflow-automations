@@ -2,7 +2,7 @@ import asyncio
 import argparse
 import json
 import os
-from src.core.services.web_crawler.crawler import crawl_with_proxy_rotation
+from core.services.web_crawler.crawler import crawl_with_proxy_rotation
 
 # Default tasks if no JSON file is provided
 DEFAULT_TASKS = [{"url":"https://www.skelbiu.lt/skelbimai/kompiuterija/kompiuteriai/stacionarus-kompiuteriai/","id":"skelbiu_stacionarus_kompiuteriai"}]
