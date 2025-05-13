@@ -5,8 +5,8 @@ import os
 import tiktoken
 from typing import List, Optional, Union
 
-from src.core.utils import LoggerFactory
-from src.core.config import app_config
+from core.utils import LoggerFactory
+from core.config import app_config
 
 logger = LoggerFactory.get_logger(name=app_config.APP_TITLE,log_level=app_config.log_level, trace_enabled=True)
 

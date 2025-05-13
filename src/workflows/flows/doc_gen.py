@@ -6,7 +6,6 @@ from pathlib import Path
 from prefect import flow, task
 from prefect.artifacts import create_markdown_artifact
 
-from workflows.tasks.db_ops import db_retrieve_document_by_id
 from core.utils import LoggerFactory
 
 from core.config import app_config
@@ -16,7 +15,6 @@ logger = LoggerFactory.get_logger(name=app_config.APP_TITLE,log_level=app_config
 @flow(
     log_prints=True, 
     name="run_generate_docs", 
-    result_storage="local-file-system/dev-result-storage",
     description="Build markdown docs from MongoDB object",
 )
 async def run_generate_docs_new(build_from_obj):
@@ -57,69 +55,68 @@ async def run_generate_docs_new(build_from_obj):
     logger.info(f"Documentation saved to {filepath}")
     return str(filepath)
     
-@flow(
-    log_prints=True, 
-    name="run_generate_docs_old", 
-    result_storage="local-file-system/dev-result-storage",
-    description="Build markdown docs from MongoDB object",
-)
-async def run_generate_docs_old(build_from_obj_id: str):
-    """
-    Generate markdown documentation based on a MongoDB document.
+# @flow(
+#     log_prints=True, 
+#     name="run_generate_docs_old", 
+#     description="Build markdown docs from MongoDB object",
+# )
+# async def run_generate_docs_old(build_from_obj_id: str):
+#     """
+#     Generate markdown documentation based on a MongoDB document.
     
-    Args:
-        build_from_obj_id: MongoDB ObjectId of the document to use
+#     Args:
+#         build_from_obj_id: MongoDB ObjectId of the document to use
         
-    Returns:
-        Path to the generated markdown file
-    """
-    # Retrieve MongoDB document by ID
-    retrieval_result = await db_retrieve_document_by_id.fn(
-        doc_id=build_from_obj_id,
-        db_name="workflows",
-        coll_name="repomix",
-        create_artifact=False
-    )
+#     Returns:
+#         Path to the generated markdown file
+#     """
+#     # Retrieve MongoDB document by ID
+#     retrieval_result = await db_retrieve_document_by_id.fn(
+#         doc_id=build_from_obj_id,
+#         db_name="workflows",
+#         coll_name="repomix",
+#         create_artifact=False
+#     )
     
-    if retrieval_result.is_failed():
-        retrieval_result = await retrieval_result.result()
-        raise ValueError(f"Failed to retrieve document: {getattr(retrieval_result,'errors',[])}")
+#     if retrieval_result.is_failed():
+#         retrieval_result = await retrieval_result.result()
+#         raise ValueError(f"Failed to retrieve document: {getattr(retrieval_result,'errors',[])}")
     
-    # Access the document data
-    retrieval_result = await retrieval_result.result()
+#     # Access the document data
+#     retrieval_result = await retrieval_result.result()
     
-    doc = getattr(retrieval_result,'db_result', None)
+#     doc = getattr(retrieval_result,'db_result', None)
     
-    if not doc:
-        raise ValueError(f"No document found with ID {build_from_obj_id}")
+#     if not doc:
+#         raise ValueError(f"No document found with ID {build_from_obj_id}")
     
-    # Generate markdown documentation
-    markdown_content = generate_markdown_from_doc(doc)
+#     # Generate markdown documentation
+#     markdown_content = generate_markdown_from_doc(doc)
     
-    # Create artifact filename (repo name + timestamp)
-    repo_name = doc.get("repository_name", "unnamed-repo")
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    artifact_key = f"documentation-{repo_name}-{timestamp}"
+#     # Create artifact filename (repo name + timestamp)
+#     repo_name = doc.get("repository_name", "unnamed-repo")
+#     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+#     artifact_key = f"documentation-{repo_name}-{timestamp}"
     
-    # Create markdown artifact
-    artifact = await create_markdown_artifact(
-        key=artifact_key,
-        markdown=markdown_content,
-        description=f"Documentation for {repo_name}",
-    )
+#     # Create markdown artifact
+#     artifact = await create_markdown_artifact(
+#         key=artifact_key,
+#         markdown=markdown_content,
+#         description=f"Documentation for {repo_name}",
+#     )
     
-    # Also save to a file in the reports directory
-    reports_dir = Path("reports")
-    reports_dir.mkdir(exist_ok=True)
+#     # Also save to a file in the reports directory
+#     reports_dir = Path("reports")
+#     reports_dir.mkdir(exist_ok=True)
     
-    filename = f"{repo_name.upper()}.md"
-    filepath = reports_dir / filename
+#     filename = f"{repo_name.upper()}.md"
+#     filepath = reports_dir / filename
     
-    with open(filepath, "w") as f:
-        f.write(markdown_content)
+#     with open(filepath, "w") as f:
+#         f.write(markdown_content)
     
-    logger.info(f"Documentation saved to {filepath}")
-    return str(filepath)
+#     logger.info(f"Documentation saved to {filepath}")
+#     return str(filepath)
 
 @task(name="generate_markdown_from_doc")
 def generate_markdown_from_doc(doc):
@@ -1063,4 +1060,4 @@ def generate_github_directory_structure(doc):
     
     return markdown
 
-__all__ = ["run_generate_docs_old", "run_generate_docs_new"]
+__all__ = ["run_generate_docs_new"]
