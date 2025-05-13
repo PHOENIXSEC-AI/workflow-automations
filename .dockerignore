@@ -1,0 +1,56 @@
+# Git
+.git
+.gitignore
+.github
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yaml
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific
+crawler_results/
+reports/
+.workflow-automation/
+analyze_and_document_repos.dist/
+analyze_and_document_repos.build/
+
+# Large files
+*.db
+*.sqlite
+*.log 

@@ -1,24 +1,26 @@
-.PHONY: clean clean-build clean-pyc compile activate help 
+.PHONY: help clean clean-docker docker-dev example start stop diagnose
 
 help:
-	@echo "clean - remove all build, test, coverage and Python artifacts"
-	@echo "clean-build - remove build artifacts"
-	@echo "clean-pyc - remove Python file artifacts"
-	@echo "compile - compile the project to an executable"
-	@echo "compile-onefile - compile to a single executable file"
-	@echo "install - install the package to the active Python's site-packages"
-	@echo "test - run tests quickly with pytest"
-	@echo "lint - check style with flake8"
+	@echo "Workflow Automation Project Makefile"
+	@echo ""
+	@echo "Quick Start:"
+	@echo "  docker-dev - start development environment (use this for quickstart)"
+	@echo "  example - run example workflow"
+	@echo ""
+	@echo "Docker Commands:"
+	@echo "  start - start all services with docker compose"
+	@echo "  stop - stop all services"
+	@echo "  diagnose - run docker build diagnostics"
+	@echo ""
+	@echo "Cleaning:"
+	@echo "  clean - remove all build artifacts"
+	@echo "  clean-docker - stop containers and remove images"
 
-clean: clean-build clean-pyc
-
-clean-build:
+clean:
 	rm -fr build/
 	rm -fr dist/
 	rm -fr *.egg-info
 	rm -fr .eggs/
-
-clean-pyc:
 	find . -name '*.pyc' -delete
 	find . -name '*.pyo' -delete
 	find . -name '*~' -delete
@@ -30,32 +32,33 @@ clean-pyc:
 	find . -name '.tox' -exec rm -fr {} +
 	find . -name '*.spec' -delete
 
-install:
-	pip install -e .
+clean-docker:
+	docker compose down -v
+	docker rmi phoenixsec/workflow-automation:latest 2>/dev/null || true
 
-compile: install
-	pyinstaller src/core/services/web_crawler/crawler.py --name webcrawler --hidden-import=crawl4ai --hidden-import=chromadb --add-data="src/core/services/web_crawler/proxies.csv:src/core/services/web_crawler"
+start:
+	docker compose up -d
 
-compile-onefile: install
-	pyinstaller src/core/services/web_crawler/crawler.py --name webcrawler --onefile --hidden-import=crawl4ai --hidden-import=chromadb --add-data="src/core/services/web_crawler/proxies.csv:src/core/services/web_crawler"
+stop:
+	docker compose down
 
-app-compile: install
-	pyinstaller src/core/services/web_crawler/app.py --name webcrawler-app --hidden-import=crawl4ai --hidden-import=chromadb --add-data="src/core/services/web_crawler/proxies.csv:src/core/services/web_crawler" --add-data="tasks.json:."
+# Main quickstart target
+docker-dev: start
+	@echo "Starting development environment..."
+	@echo "Once inside the container, you can run your custom commands"
+	docker compose exec development bash
 
-app-compile-onefile: install
-	pyinstaller src/core/services/web_crawler/app.py --name webcrawler-app --onefile --hidden-import=crawl4ai --hidden-import=chromadb --add-data="src/core/services/web_crawler/proxies.csv:src/core/services/web_crawler" --add-data="tasks.json:."
+# Example workflow
+example: start
+	docker compose exec development doc-gen --urls https://github.com/nielstron/demjson3
 
-activate:
-	source .venv/bin/activate
-
-run: install
-	python src/core/services/web_crawler/app.py
-
-run-with-tasks: install
-	python src/core/services/web_crawler/app.py --tasks $(TASKS_FILE)
-
-test: install
-	pytest
-
-lint:
-	flake8 src tests
+# Run diagnostics
+diagnose:
+	@echo "Running docker build diagnostics..."
+	./build-debug.sh
+	@echo ""
+	@echo "Checking docker environment..."
+	docker version
+	@echo ""
+	@echo "Checking docker compose environment..."
+	docker compose version
