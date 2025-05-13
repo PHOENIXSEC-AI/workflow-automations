@@ -260,7 +260,7 @@ async def run_agent_pydantic(
         config = agent_config
     
     # Determine which prompt to use (user_prompt has priority over task.instructions)
-    prompt_to_use = user_prompt or task.instructions
+    prompt_to_use = (user_prompt or task.instructions)
     
     # Create a more configurable timeout with safety margin
     timeout_seconds = config.get("timeout_seconds", 90)  # Default 90 seconds
@@ -277,20 +277,19 @@ async def run_agent_pydantic(
         )
         
         # Process successful response
-        if agent_response and hasattr(agent_response, 'data'):
-            result = agent_response.data
-            # If result is not a string, convert it to a string representation
-            if not isinstance(result, AgentAnalysisResult):
-                error_result = AgentErrorResult(
-                    task=task,
-                    error_type="invalid_response",
-                    message=f"Agent Response is not a valid AgentAnalysisResult instance. Got {type(result)}"
-                )
-                return Failed(data=error_result, message="Agent Response is invalid, either parsing was unsuccessful or did not execute at all")
-
+        result = getattr(agent_response,'data',None)
+        
+        if not result:
+            error_result = AgentErrorResult(
+                task=task,
+                error_type="empty_response",
+                message=f"The LLM returned an empty response for model {config.get('model')}"
+            )
+            return Failed(data=error_result, message="Agent returned empty response")
+            
+        if isinstance(result, AgentAnalysisResult):
             duration = time.time() - start_time
-            
-            
+        
             success_result = AgentSuccessResult(
                 task=task,
                 result=result,
@@ -301,16 +300,14 @@ async def run_agent_pydantic(
             return Completed(
                 data=success_result, 
                 message=f"Agent {agent_name} completed successfully in {duration:.2f}s. Retry attempts: {get_current_retry_count()+1}")
-        
-        # Handle empty response (unlikely but possible)
-        logger.warning(f"Agent {agent_name} returned empty response")
-        error_result = AgentErrorResult(
-            task=task,
-            error_type="empty_response",
-            message=f"The LLM returned an empty response for model {config.get('model')}"
-        )
-        return Failed(data=error_result, message="Agent returned empty response")
-    
+        else:
+            error_result = AgentErrorResult(
+                task=task,
+                error_type="invalid_response",
+                message=f"Agent Response is not a valid AgentAnalysisResult instance. Got {type(result)}"
+            )
+            return Failed(data=error_result, message="Agent Response is invalid, either parsing was unsuccessful or did not execute at all")
+
     except asyncio.TimeoutError as e:
         # Our own timeout guard triggered
         duration = time.time() - start_time
