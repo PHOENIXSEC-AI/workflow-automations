@@ -43,7 +43,6 @@ def prepare_analysis_metadata(task: RepoAnalysisTask,local_repo_path:str) -> Dic
 @flow(
     log_prints=True, 
     name="run_repo_analysis", 
-    result_storage="local-file-system/dev-result-storage",
     description="Analyze a Git repository using Repomix and return the analysis results"
 )
 def run_repo_analysis(task: RepoAnalysisTask):

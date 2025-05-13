@@ -136,7 +136,6 @@ async def _analyze_repo(github_url:str, repomix_config_path:str=DEFAULT_REPOMIX_
 @flow(
     log_prints=True, 
     name="run_analyze_and_document_repos", 
-    result_storage="local-file-system/dev-result-storage",
     description="Run full analysis of multiple private repos with the same configuration",
 )
 async def run_analyze_and_document_repos(
@@ -259,8 +258,8 @@ async def run_analyze_and_document_repos(
                 # Run Base Information Extraction Strategy Flow to get env, api, db constants
                 base_result_data = await add_basev2(repomix_result=tool_run_result)
                 
-                logger.info(f"Running Security Review Strategy")
-                appsec_result_data = await security_review(repomix_result=tool_run_result)
+                # logger.info(f"Running Security Review Strategy")
+                # appsec_result_data = await security_review(repomix_result=tool_run_result)
                 
                 # Additional strategies goes here
                 
@@ -268,7 +267,7 @@ async def run_analyze_and_document_repos(
                     raise Exception(f"add_base returned empty object")
 
                 # Results from additional strategies should be included here
-                results_to_be_merged.extend([base_result_data, appsec_result_data])
+                results_to_be_merged.extend([base_result_data,])
             else:
                 raise ValueError(f"Error: Enhanced Analysis completed but result is None. Skipping...")
             

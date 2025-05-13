@@ -20,7 +20,6 @@ logger = LoggerFactory.get_logger(name=app_config.APP_TITLE,log_level=app_config
 @flow(
     log_prints=True, 
     name="add_base", 
-    result_storage="local-file-system/dev-result-storage",
     description="Analyze Repomix results and extract base information",
 )
 async def add_base(repomix_result_obj_id:str):
@@ -48,7 +47,6 @@ async def add_basev2(repomix_result:RepoAnalysisResult) -> Union[Completed,Faile
 @flow(
     log_prints=True, 
     name="security_review", 
-    result_storage="local-file-system/dev-result-storage",
     description="Analyze Repomix results and perform Security Review",
 )
 async def security_review(repomix_result:RepoAnalysisResult):

@@ -56,7 +56,6 @@ def prepare_private_analysis_metadata(
 @flow(
     log_prints=False,  # Changed to False to reduce verbosity
     name="run_private_repo_analysis", 
-    result_storage="local-file-system/dev-result-storage",
     description="Fetch a private GitHub repository, analyze it using Repomix, and store the results"
 )
 def run_private_repo_analysis(task: RepoAnalysisTask) -> Union[Completed,Failed]:
